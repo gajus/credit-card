@@ -78,7 +78,7 @@ class Validate /*implements \ArrayAccess*/ {
 		
 	public function get () {
 		return [
-			'number' => $this->card_type,
+			'number' => $this->card_number,
 			'security_code' => $this->card_security_code,
 			'type' => $this->card_type,
 			'expiration_date' => $this->expiration_date
