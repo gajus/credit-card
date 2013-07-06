@@ -1,13 +1,16 @@
 <?php
 namespace ay\Credit_Card;
 
-class Validate {
+class Validate /*implements \ArrayAccess*/ {
 	private
 		$card_number,
-		$card_type;
+		$card_security_code,
+		$card_type,
+		$expiration_date;
 	
-	public function __construct ($card_number) {
+	public function __construct ($card_number, $security_code) {
 		$this->card_number = (string) $card_number;
+		$this->card_security_code = (string) $security_code;
 		
 		if (!$this->isValidFormat()) {
 			throw new Invalid_Card_Exception('Credit Card Number must consist only of digits [0-9].');
@@ -33,12 +36,26 @@ class Validate {
 		}
 		
 		if (!$this->card_type) {
-			throw new Invalid_Card_Exception('Invalid Credit Card Number.');
+			throw new Invalid_Card_Exception('Invalid credit card number.');
 		}
 	}
 	
+	/**
+	 * @param int $year
+	 * @param int $month
+	 */
+	public function setExpirationDate ($year, $month) {
+		if (!checkdate($month, 1, $year)) {
+			throw new Invalid_Card_Exception('Invalid credit card expiration date.');
+		} else if (mktime(0, 0, 0, $month, 1, $year) < $_SERVER['REQUEST_TIME']) {
+			throw new Invalid_Card_Exception('Expiration date cannot be a past date.');
+		}
+		
+		$this->expiration_date = ['year' => $year, 'month' => $month];
+	}
+	
 	private function isValidFormat () {
-		if ($this->card_number != preg_replace('/[^0-9]/' '', $this->card_number)) {
+		if ($this->card_number != preg_replace('/[^0-9]/', '', $this->card_number)) {
 			return false;
 		}
 		
@@ -58,12 +75,13 @@ class Validate {
 		
 		return array_sum(str_split($card_number_checksum)) % 10 === 0;
 	}
-	
-	public function getCardNumber () {
-		return $this->card_number;
-	}
-	
-	public function getCardType () {
-		return $this->card_type;
+		
+	public function get () {
+		return [
+			'number' => $this->card_type,
+			'security_code' => $this->card_security_code,
+			'type' => $this->card_type,
+			'expiration_date' => $this->expiration_date
+		];
 	}
 }
